@@ -174,8 +174,8 @@ const App = () => {
   }, []);
 
   const getColor = (input: number) => {
-    const red = Math.floor(255 * (1 - input / 5));
-    const green = Math.floor(255 * input);
+    const red = Math.floor(255 * ((1 - input * 150 ) < 0 ? 0 : (1 - input * 150 )));
+    const green = Math.floor(255 * input * 1000 > 255 ? 255 : 255 * input * 1000);
     const blue = 0;
 
     return `rgb(${red}, ${green}, ${blue})`;
@@ -202,10 +202,10 @@ const App = () => {
                   <TableCell align="left">Current Day Volume</TableCell>
                   {[...new Array(365)].map((_, i) => {
                     const a = new Date()
-                    const b = new Date(a.setDate(a.getDate() - i))
+                    const b = new Date(a.setDate(a.getDate() - i - 1))
                     return (
 
-                      <TableCell align="left">{b.toDateString()}</TableCell>
+                      <TableCell key={i} align="left">{b.toDateString()}</TableCell>
                     )
                   })}
                 </TableRow>
@@ -226,7 +226,7 @@ const App = () => {
                     {row.poolDayData.map(s => {
                       const koef = s.volumeUSD / s.tvlUSD * row.feeTier / 1000000;
                       return (
-                        <TableCell align="left" style={{ backgroundColor: getColor(koef * 1000) }}>{koef.toFixed(8)}</TableCell>
+                        <TableCell align="left" style={{ backgroundColor: getColor(koef) }}>{koef.toFixed(8)}</TableCell>
                       )
                     })}
                   </TableRow>
