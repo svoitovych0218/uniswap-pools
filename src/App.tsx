@@ -164,7 +164,7 @@ const App = () => {
           volumeToken1: q.volumeToken1
         })),
         prev2DayKoef: s.poolDayData[2] ? s.poolDayData[2].volumeUSD / s.poolDayData[2].tvlUSD * s.feeTier / 1000000 : NaN,
-      }));
+      })).filter(s=>s.poolDayData.some((s: any) => s.volumeUSD > 0));
 
 
 
