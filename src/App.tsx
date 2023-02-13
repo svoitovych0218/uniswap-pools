@@ -10,8 +10,8 @@ import './App.css';
 import Stack from '@mui/material/Stack';
 import CircularProgress from '@mui/material/CircularProgress';
 import { getPools, IPool, IPoolDayData } from './api/getPools';
-import { getTopPoolIds } from './api/getPoolIds';
-import { Button } from '@mui/material';
+import { getTopPoolIds, Network } from './api/getPoolIds';
+import { Button, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 
 const getAveragePercentage = (poolDayData: IPoolDayData[]) => {
   const average = poolDayData.map(s => s.multiplier).reduce((partialSum, a) => partialSum + a, 0) / poolDayData.length;
@@ -38,28 +38,30 @@ const App = () => {
   const pageSize = 100;
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [selectedRowId, setSelectedRowId] = useState<string>('');
+  const [selectedNetwork, setSelectedNetwork] = useState<Network>(Network.Eth);
 
   useEffect(() => {
     (async () => {
+      setPools([]);
       setIsLoading(true);
 
-      const poolIds = await getTopPoolIds(pageSize, 0);
-      const pools = await getPools(poolIds);
+      const poolIds = await getTopPoolIds(pageSize, 0, selectedNetwork);
+      const pools = await getPools(poolIds, selectedNetwork);
       setPools(pools);
       setIsLoading(false);
     })();
-  }, []);
+  }, [selectedNetwork]);
 
   const loadMore = useCallback(async () => {
     setIsLoading(true);
 
-    const poolIds = await getTopPoolIds(pageSize, pageSize * pageNumber);
-    const pools = await getPools(poolIds);
+    const poolIds = await getTopPoolIds(pageSize, pageSize * pageNumber, selectedNetwork);
+    const pools = await getPools(poolIds, selectedNetwork);
     setPools(prev => [...prev, ...pools]);
     setPageNumber(prev => prev + 1);
     setIsLoading(false);
 
-  }, [pageNumber]);
+  }, [pageNumber, selectedNetwork]);
 
   const getColor = (input: number) => {
     const red = Math.floor(255 * ((1 - input * 150) < 0 ? 0 : (1 - input * 150)));
@@ -71,7 +73,7 @@ const App = () => {
 
   const getColorForComplexPercentage = (input: number | null, multiplier: number) => {
 
-    if(input === null){
+    if (input === null) {
       return `rgb(255,255,255)`;
     }
 
@@ -87,10 +89,8 @@ const App = () => {
     return `rgb(${red}, ${green}, ${blue})`;
   }
 
-  console.log(getColorForComplexPercentage(1.64, 11))
 
   const selectRow = useCallback((rowId: string) => {
-    console.log(1);
     setSelectedRowId(rowId);
   }, []);
 
@@ -113,6 +113,19 @@ const App = () => {
     <div className="App">
       <header className="App-header">
         <TableContainer sx={{ maxHeight: 1000 }} style={{ marginTop: '50px', marginBottom: '50px' }} component={Paper}>
+        <FormControl style={{marginTop: '5px', width: '100px', float: 'left'}}>
+          <InputLabel id="demo-simple-select-label">Network</InputLabel>
+          <Select
+            labelId="demo-simple-select-label"
+            id="demo-simple-select"
+            value={selectedNetwork}
+            label="Age"
+            onChange={(e)=> setSelectedNetwork(+e.target.value)}
+          >
+            <MenuItem value={1}>Eth</MenuItem>
+            <MenuItem value={2}>Polygon</MenuItem>
+          </Select>
+        </FormControl>
           <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table" stickyHeader >
             <TableHead>
               <TableRow selected>
@@ -145,7 +158,7 @@ const App = () => {
                   onClick={() => selectRow(row.id)}
                 >
                   <TableCell align="center">{i + 1}</TableCell>
-                  <TableCell align="center"><a href={`https://info.uniswap.org/#/pools/${row.id}`} target="_blank" rel="noreferrer">link</a></TableCell>
+                  <TableCell align="center"><a href={selectedNetwork === Network.Eth ? `https://info.uniswap.org/#/pools/${row.id}` : `https://info.uniswap.org/#/polygon/pools/${row.id}`} target="_blank" rel="noreferrer">link</a></TableCell>
                   <TableCell align="center">{row.token0.symbol}</TableCell>
                   <TableCell align="center">{row.token1.symbol}</TableCell>
                   <TableCell align="center">{row.feeTier / 10000}%</TableCell>

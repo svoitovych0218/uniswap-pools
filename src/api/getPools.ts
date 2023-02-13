@@ -1,6 +1,8 @@
 import axios from "axios";
+import { Network } from "./getPoolIds";
 
 const endpoint = 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3';
+const endpointPolygon = 'https://api.thegraph.com/subgraphs/name/ianlapham/uniswap-v3-polygon'
 
 interface IToken {
     id: string;
@@ -34,7 +36,7 @@ export interface IPool {
     poolDayData: IPoolDayData[];
 }
 
-export const getPools = async (poolIds: string[]) => {
+export const getPools = async (poolIds: string[], network: Network) => {
     const poolIdsArray = poolIds.map(s => `"${s}"`).join(' ');
     const query = `query pools {
         pools(
@@ -86,8 +88,10 @@ export const getPools = async (poolIds: string[]) => {
           __typename
         }
       }`
+    
+    const url = network === Network.Eth ? endpoint : endpointPolygon;
 
-    const res = await axios.post(endpoint, {
+    const res = await axios.post(url, {
         operationName: 'pools',
         query: query,
         variables: null
